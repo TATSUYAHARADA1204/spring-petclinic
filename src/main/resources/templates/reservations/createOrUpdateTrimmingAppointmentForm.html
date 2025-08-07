@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'owners')}">
+<body>
+	<h2>Trimming Appointment</h2>
+	<form th:object="${trimmingAppointment}" class="form-horizontal" method="post">
+		<input type="hidden" name="id" th:value="*{id}" />
+		<div class="form-group has-feedback">
+			<div class="form-group">
+				<label class="col-sm-2 control-label">Pet</label>
+				<div class="col-sm-10">
+					<span th:text="*{pet.name}" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label">Appointment Time</label>
+				<div class="col-sm-10">
+					<input th:field="*{appointmentTime}" class="form-control" type="datetime-local" />
+					<span class="help-inline" th:if="${#fields.hasErrors('appointmentTime')}" th:errors="*{appointmentTime}"></span>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label">Course</label>
+				<div class="col-sm-10">
+					<input th:field="*{course}" class="form-control" type="text" />
+					<span class="help-inline" th:if="${#fields.hasErrors('course')}" th:errors="*{course}"></span>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label">Trimmer Name</label>
+				<div class="col-sm-10">
+					<input th:field="*{trimmerName}" class="form-control" type="text" />
+					<span class="help-inline" th:if="${#fields.hasErrors('trimmerName')}" th:errors="*{trimmerName}"></span>
+				</div>
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="col-sm-offset-2 col-sm-10">
+				<button class="btn btn-primary" type="submit">Save Appointment</button>
+			</div>
+		</div>
+	</form>
+</body>
+</html>

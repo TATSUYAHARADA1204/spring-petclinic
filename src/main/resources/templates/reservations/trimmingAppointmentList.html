@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'trimming-reservations')}">
+<body>
+	<h2>Trimming Appointments</h2>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Pet Name</th>
+				<th>Owner</th>
+				<th>Appointment Time</th>
+				<th>Course</th>
+				<th>Trimmer</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="appointment : ${appointments}">
+				<td th:text="${appointment.pet.name}">Buddy</td>
+				<td th:text="${appointment.pet.owner.firstName + ' ' + appointment.pet.owner.lastName}">George Franklin</td>
+				<td th:text="${#temporals.format(appointment.appointmentTime, 'yyyy-MM-dd HH:mm')}">2025-07-28 11:00</td>
+				<td th:text="${appointment.course}">Shampoo Course</td>
+				<td th:text="${appointment.trimmerName}">Jane Doe</td>
+				<td>
+					<a th:href="@{/reservations/trimming/{appointmentId}/edit(appointmentId=${appointment.id})}" class="btn btn-default">Edit</a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'hotel-reservations')}">
+<body>
+	<h2>Hotel Stays</h2>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Pet Name</th>
+				<th>Owner</th>
+				<th>Check-in Date</th>
+				<th>Check-out Date</th>
+				<th>Room Number</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="stay : ${stays}">
+				<td th:text="${stay.pet.name}">Buddy</td>
+				<td th:text="${stay.pet.owner.firstName + ' ' + stay.pet.owner.lastName}">George Franklin</td>
+				<td th:text="${#temporals.format(stay.checkInDate, 'yyyy-MM-dd')}">2025-08-01</td>
+				<td th:text="${#temporals.format(stay.checkOutDate, 'yyyy-MM-dd')}">2025-08-05</td>
+				<td th:text="${stay.roomNumber}">A-01</td>
+				<td>
+					<a th:href="@{/reservations/hotel/{stayId}/edit(stayId=${stay.id})}" class="btn btn-default">Edit</a>
+					<a th:href="@{/stays/{stayId}/billing(stayId=${stay.id})}" class="btn btn-default" th:if="${stay.billing == null}">Billing</a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</body>
+</html>

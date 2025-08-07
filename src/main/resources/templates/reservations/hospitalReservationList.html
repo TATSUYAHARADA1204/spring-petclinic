@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'hospital-reservations')}">
+<body>
+	<h2>Hospital Reservations</h2>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Pet Name</th>
+				<th>Owner</th>
+				<th>Vet</th>
+				<th>Reservation Time</th>
+				<th>Description</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="reservation : ${reservations}">
+				<td th:text="${reservation.pet.name}">Buddy</td>
+				<td th:text="${reservation.pet.owner.firstName + ' ' + reservation.pet.owner.lastName}">George Franklin</td>
+				<td th:text="${reservation.vet.firstName + ' ' + reservation.vet.lastName}">James Carter</td>
+				<td th:text="${#temporals.format(reservation.reservationTime, 'yyyy-MM-dd HH:mm')}">2025-07-27 10:00</td>
+				<td th:text="${reservation.description}">Annual Checkup</td>
+				<td>
+					<a th:href="@{/reservations/hospital/{reservationId}/edit(reservationId=${reservation.id})}" class="btn btn-default">Edit</a>
+					<a th:href="@{/reservations/hospital/{reservationId}/prescriptions(reservationId=${reservation.id})}" class="btn btn-default">Prescriptions</a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</body>
+</html>

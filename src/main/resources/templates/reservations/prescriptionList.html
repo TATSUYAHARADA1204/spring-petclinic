@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'hospital-reservations')}">
+<body>
+	<h2 th:text="'Prescriptions for ' + ${reservation.pet.name}">Prescriptions</h2>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Medicine Name</th>
+				<th>Quantity</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="prescription : ${reservation.prescriptions}">
+				<td th:text="${prescription.medicineName}">Medicine A</td>
+				<td th:text="${prescription.quantity}">2</td>
+			</tr>
+		</tbody>
+	</table>
+	<a class="btn btn-primary" th:href="@{/reservations/hospital/{reservationId}/prescriptions/new(reservationId=${reservation.id})}">Add New Prescription</a>
+</body>
+</html>

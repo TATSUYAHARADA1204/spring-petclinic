@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'hotel-reservations')}">
+<body>
+	<h2>Hotel Billing</h2>
+	<form th:object="${billing}" class="form-horizontal" method="post">
+		<input type="hidden" name="id" th:value="*{id}" />
+		<input type="hidden" th:field="*{stay}" />
+		<div class="form-group has-feedback">
+			<div class="form-group">
+				<label class="col-sm-2 control-label">Pet</label>
+				<div class="col-sm-10">
+					<span th:text="*{stay.pet.name}" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label">Stay Period</label>
+				<div class="col-sm-10">
+					<span th:text="${#temporals.format(billing.stay.checkInDate, 'yyyy-MM-dd')} + ' - ' + ${#temporals.format(billing.stay.checkOutDate, 'yyyy-MM-dd')}" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label">Amount</label>
+				<div class="col-sm-10">
+					<input th:field="*{amount}" class="form-control" type="number" />
+					<span class="help-inline" th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></span>
+				</div>
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="col-sm-offset-2 col-sm-10">
+				<button class="btn btn-primary" type="submit">Process Payment</button>
+			</div>
+		</div>
+	</form>
+</body>
+</html>
