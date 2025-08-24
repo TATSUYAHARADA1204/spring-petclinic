@@ -36,6 +36,16 @@
 		<div class="form-group">
 			<div class="col-sm-offset-2 col-sm-10">
 				<button class="btn btn-primary" type="submit">Save Appointment</button>
+
+				<!-- 削除ボタン: 編集画面のみ表示 -->
+				<span th:if="*{id} != null">
+					<a href="#" class="btn btn-danger"
+					   th:if="*{id} != null"
+					   th:attr="data-id=*{id}"
+					   onclick="if(confirm('本当に削除しますか？')) { fetch('/reservations/trimming/' + this.getAttribute('data-id') + '/delete', {method: 'POST'}).then(()=>location.href='/reservations/trimming'); } return false;">
+					   Delete Appointment
+					</a>
+				</span>
 			</div>
 		</div>
 	</form>

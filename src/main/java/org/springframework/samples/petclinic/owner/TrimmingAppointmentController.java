@@ -73,4 +73,11 @@ class TrimmingAppointmentController {
 		return "redirect:/reservations/trimming";
 	}
 
+	// --- 削除処理 ---
+	@PostMapping("/reservations/trimming/{appointmentId}/delete")
+	public String deleteAppointment(@PathVariable("appointmentId") int appointmentId) {
+		this.appointments.deleteById(appointmentId);
+		return "redirect:/reservations/trimming";
+	}
+
 }
