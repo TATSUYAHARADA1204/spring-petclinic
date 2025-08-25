@@ -43,12 +43,13 @@ class TrimmingAppointmentController {
 	public String processCreationForm(@Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
 			BindingResult result, @PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId, Model model) {
 		if (result.hasErrors()) {
-			Pet pet = this.pets.findById(petId)
-				.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
-			appointment.setPet(pet);
 			model.addAttribute("trimmingAppointment", appointment);
 			return "reservations/createOrUpdateTrimmingAppointmentForm";
 		}
+
+		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+		appointment.setPet(pet);
+
 		this.appointments.save(appointment);
 		return "redirect:/owners/" + ownerId;
 	}
@@ -69,6 +70,13 @@ class TrimmingAppointmentController {
 		}
 		appointment.setId(appointmentId);
 		this.appointments.save(appointment);
+		return "redirect:/reservations/trimming";
+	}
+
+	// --- 削除処理 ---
+	@PostMapping("/reservations/trimming/{appointmentId}/delete")
+	public String deleteAppointment(@PathVariable("appointmentId") int appointmentId) {
+		this.appointments.deleteById(appointmentId);
 		return "redirect:/reservations/trimming";
 	}
 
