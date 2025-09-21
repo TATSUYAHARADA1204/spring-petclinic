@@ -59,21 +59,29 @@ class TrimmingAppointmentController {
 		return "redirect:/owners/" + ownerId;
 	}
 
-	@GetMapping("/reservations/trimming/{appointmentId}/edit")
-	public String initUpdateForm(@PathVariable("appointmentId") int appointmentId, Model model) {
-		TrimmingAppointment appointment = this.appointments.findById(appointmentId)
+	@ModelAttribute("trimmingAppointment")
+	public TrimmingAppointment appointment(@PathVariable(name = "appointmentId", required = false) Integer appointmentId) {
+		if (appointmentId == null) {
+			return new TrimmingAppointment();
+		}
+		return this.appointments.findById(appointmentId)
 			.orElseThrow(() -> new IllegalArgumentException("Invalid appointment Id:" + appointmentId));
-		model.addAttribute("trimmingAppointment", appointment);
+	}
+
+	@GetMapping("/reservations/trimming/{appointmentId}/edit")
+	public String initUpdateForm(@ModelAttribute("trimmingAppointment") TrimmingAppointment appointment, Model model) {
+		model.addAttribute("pet", appointment.getPet());
 		return "reservations/createOrUpdateTrimmingAppointmentForm";
 	}
 
 	@PostMapping("/reservations/trimming/{appointmentId}/edit")
 	public String processUpdateForm(@Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
-			BindingResult result, @PathVariable("appointmentId") int appointmentId) {
+									BindingResult result, Model model) {
 		if (result.hasErrors()) {
+			model.addAttribute("pet", appointment.getPet());
 			return "reservations/createOrUpdateTrimmingAppointmentForm";
 		}
-		appointment.setId(appointmentId);
+
 		this.appointments.save(appointment);
 		return "redirect:/reservations/trimming";
 	}
