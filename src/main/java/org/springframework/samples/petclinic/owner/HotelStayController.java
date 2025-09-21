@@ -29,26 +29,31 @@ class HotelStayController {
 		return "reservations/hotelStayList";
 	}
 
-	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/hotel/new")
-	public String initCreationForm(@PathVariable("petId") int petId, Map<String, Object> model) {
-		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId)); // ★
-																														// 修正
+	@ModelAttribute("hotelStay")
+	public HotelStay loadPetWithStay(@PathVariable(name = "petId", required = false) Integer petId,
+									 Map<String, Object> model) {
 		HotelStay stay = new HotelStay();
-		stay.setPet(pet);
-		model.put("hotelStay", stay);
+		if (petId != null) {
+			Pet pet = this.pets.findById(petId)
+				.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+			stay.setPet(pet);
+			model.put("pet", pet);
+		}
+		return stay;
+	}
+
+	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/hotel/new")
+	public String initCreationForm() {
 		return "reservations/createOrUpdateHotelStayForm";
 	}
 
 	@PostMapping("/owners/{ownerId}/pets/{petId}/reservations/hotel/new")
 	public String processCreationForm(@Valid @ModelAttribute("hotelStay") HotelStay stay, BindingResult result,
-			@PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId, Model model) {
+									  @PathVariable("ownerId") int ownerId) {
 		if (result.hasErrors()) {
-			Pet pet = this.pets.findById(petId)
-				.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
-			stay.setPet(pet);
-			model.addAttribute("hotelStay", stay);
 			return "reservations/createOrUpdateHotelStayForm";
 		}
+
 		this.stays.save(stay);
 		return "redirect:/owners/" + ownerId;
 	}

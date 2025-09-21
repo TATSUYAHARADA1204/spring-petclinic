@@ -29,26 +29,31 @@ class TrimmingAppointmentController {
 		return "reservations/trimmingAppointmentList";
 	}
 
-	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/trimming/new")
-	public String initCreationForm(@PathVariable("petId") int petId, Map<String, Object> model) {
-		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId)); // ★
-																														// 修正
+	@ModelAttribute("trimmingAppointment")
+	public TrimmingAppointment loadPetWithAppointment(@PathVariable(name = "petId", required = false) Integer petId,
+													  Map<String, Object> model) {
 		TrimmingAppointment appointment = new TrimmingAppointment();
-		appointment.setPet(pet);
-		model.put("trimmingAppointment", appointment);
+		if (petId != null) {
+			Pet pet = this.pets.findById(petId)
+				.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+			appointment.setPet(pet);
+			model.put("pet", pet);
+		}
+		return appointment;
+	}
+
+	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/trimming/new")
+	public String initCreationForm() {
 		return "reservations/createOrUpdateTrimmingAppointmentForm";
 	}
 
 	@PostMapping("/owners/{ownerId}/pets/{petId}/reservations/trimming/new")
-	public String processCreationForm(@Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
-			BindingResult result, @PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId, Model model) {
+	public String processCreationForm(
+		@Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
+		BindingResult result, @PathVariable("ownerId") int ownerId) {
 		if (result.hasErrors()) {
-			model.addAttribute("trimmingAppointment", appointment);
 			return "reservations/createOrUpdateTrimmingAppointmentForm";
 		}
-
-		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
-		appointment.setPet(pet);
 
 		this.appointments.save(appointment);
 		return "redirect:/owners/" + ownerId;
