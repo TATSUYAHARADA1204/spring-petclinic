@@ -58,21 +58,28 @@ class HotelStayController {
 		return "redirect:/owners/" + ownerId;
 	}
 
+	@ModelAttribute("hotelStay")
+	public HotelStay stay(@PathVariable(name = "stayId", required = false) Integer stayId) {
+		if (stayId == null) {
+			return new HotelStay();
+		}
+		return this.stays.findById(stayId).orElseThrow(() -> new IllegalArgumentException("Invalid stay Id:" + stayId));
+	}
+
 	@GetMapping("/reservations/hotel/{stayId}/edit")
-	public String initUpdateForm(@PathVariable("stayId") int stayId, Model model) {
-		HotelStay stay = this.stays.findById(stayId)
-			.orElseThrow(() -> new IllegalArgumentException("Invalid stay Id:" + stayId));
-		model.addAttribute("hotelStay", stay);
+	public String initUpdateForm(@ModelAttribute("hotelStay") HotelStay stay, Model model) {
+		model.addAttribute("pet", stay.getPet());
 		return "reservations/createOrUpdateHotelStayForm";
 	}
 
 	@PostMapping("/reservations/hotel/{stayId}/edit")
-	public String processUpdateForm(@Valid @ModelAttribute("hotelStay") HotelStay stay, BindingResult result,
-			@PathVariable("stayId") int stayId) {
+	public String processUpdateForm(@Valid @ModelAttribute("hotelStay") HotelStay stay,
+									BindingResult result, Model model) {
 		if (result.hasErrors()) {
+			model.addAttribute("pet", stay.getPet());
 			return "reservations/createOrUpdateHotelStayForm";
 		}
-		stay.setId(stayId);
+
 		this.stays.save(stay);
 		return "redirect:/reservations/hotel";
 	}

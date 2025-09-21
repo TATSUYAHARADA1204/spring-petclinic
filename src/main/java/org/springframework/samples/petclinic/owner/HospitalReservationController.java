@@ -70,21 +70,36 @@ class HospitalReservationController {
 		return "redirect:/owners/" + ownerId;
 	}
 
-	@GetMapping("/reservations/hospital/{reservationId}/edit")
-	public String initUpdateForm(@PathVariable("reservationId") int reservationId, Model model) {
-		HospitalReservation reservation = this.reservations.findById(reservationId)
+	/**
+	 * 編集対象の予約情報を事前に取得し、モデルに"hospitalReservation"という名前で格納します。
+	 * このメソッドはinitUpdateFormやprocessUpdateFormよりも先に実行されます。
+	 */
+	@ModelAttribute("hospitalReservation")
+	public HospitalReservation reservation(@PathVariable(name = "reservationId", required = false) Integer reservationId) {
+		if (reservationId == null) {
+			return new HospitalReservation();
+		}
+		// DBから予約情報を取得（これにはペット情報も含まれています）
+		return this.reservations.findById(reservationId)
 			.orElseThrow(() -> new IllegalArgumentException("Invalid reservation Id:" + reservationId));
-		model.addAttribute("hospitalReservation", reservation);
+	}
+
+	@GetMapping("/reservations/hospital/{reservationId}/edit")
+	public String initUpdateForm(@ModelAttribute("hospitalReservation") HospitalReservation reservation, Model model) {
+		// 事前に準備された予約情報からペット情報を取得し、画面表示用にモデルへ追加
+		model.addAttribute("pet", reservation.getPet());
 		return "reservations/createOrUpdateHospitalReservationForm";
 	}
 
 	@PostMapping("/reservations/hospital/{reservationId}/edit")
 	public String processUpdateForm(@Valid @ModelAttribute("hospitalReservation") HospitalReservation reservation,
-			BindingResult result, @PathVariable("reservationId") int reservationId) {
+									BindingResult result, Model model) {
 		if (result.hasErrors()) {
+			// バリデーションエラーで画面に戻る際も、ペット情報をモデルへ追加
+			model.addAttribute("pet", reservation.getPet());
 			return "reservations/createOrUpdateHospitalReservationForm";
 		}
-		reservation.setId(reservationId);
+
 		this.reservations.save(reservation);
 		return "redirect:/reservations/hospital";
 	}
