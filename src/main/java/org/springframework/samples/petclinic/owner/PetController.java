@@ -115,6 +115,7 @@ class PetController {
 			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 		}
 
+		pet.setOwner(owner);
 		owner.addPet(pet);
 		this.owners.save(owner);
 		redirectAttributes.addFlashAttribute("message", "New Pet has been Added");
