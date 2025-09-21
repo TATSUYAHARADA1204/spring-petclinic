@@ -42,23 +42,28 @@ class HospitalReservationController {
 		return "reservations/hospitalReservationList";
 	}
 
-	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/hospital/new")
-	public String initCreationForm(@PathVariable("petId") int petId, Map<String, Object> model) {
-		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+	@ModelAttribute("hospitalReservation")
+	public HospitalReservation loadPetWithReservation(@PathVariable(name = "petId", required = false) Integer petId,
+													  Map<String, Object> model) {
 		HospitalReservation reservation = new HospitalReservation();
-		reservation.setPet(pet);
-		model.put("hospitalReservation", reservation);
+		if (petId != null) {
+			Pet pet = this.pets.findById(petId)
+				.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+			reservation.setPet(pet);
+			model.put("pet", pet);
+		}
+		return reservation;
+	}
+
+	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/hospital/new")
+	public String initCreationForm() {
 		return "reservations/createOrUpdateHospitalReservationForm";
 	}
 
 	@PostMapping("/owners/{ownerId}/pets/{petId}/reservations/hospital/new")
 	public String processCreationForm(@Valid @ModelAttribute("hospitalReservation") HospitalReservation reservation,
-			BindingResult result, @PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId, Model model) {
+									  BindingResult result, @PathVariable("ownerId") int ownerId) {
 		if (result.hasErrors()) {
-			Pet pet = this.pets.findById(petId)
-				.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
-			reservation.setPet(pet);
-			model.addAttribute("hospitalReservation", reservation);
 			return "reservations/createOrUpdateHospitalReservationForm";
 		}
 		this.reservations.save(reservation);
