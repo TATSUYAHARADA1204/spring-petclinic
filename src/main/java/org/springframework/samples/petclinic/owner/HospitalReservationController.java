@@ -77,7 +77,7 @@ class HospitalReservationController {
 	@ModelAttribute("hospitalReservation")
 	public HospitalReservation reservation(@PathVariable(name = "reservationId", required = false) Integer reservationId) {
 		if (reservationId == null) {
-			return new HospitalReservation(); // 新規登録用（今回は未使用）
+			return new HospitalReservation();
 		}
 		// DBから予約情報を取得（これにはペット情報も含まれています）
 		return this.reservations.findById(reservationId)
