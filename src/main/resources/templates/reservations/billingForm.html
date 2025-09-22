@@ -5,6 +5,7 @@
 	<form th:object="${billing}" class="form-horizontal" method="post">
 		<input type="hidden" name="id" th:value="*{id}" />
 		<input type="hidden" th:field="*{stay}" />
+
 		<div class="form-group has-feedback">
 			<div class="form-group">
 				<label class="col-sm-2 control-label">Pet</label>
@@ -18,12 +19,67 @@
 					<span th:text="${#temporals.format(billing.stay.checkInDate, 'yyyy-MM-dd')} + ' - ' + ${#temporals.format(billing.stay.checkOutDate, 'yyyy-MM-dd')}" />
 				</div>
 			</div>
+
 			<div class="form-group">
-				<label class="col-sm-2 control-label">Amount</label>
-				<div class="col-sm-10">
-					<input th:field="*{amount}" class="form-control" type="number" />
-					<span class="help-inline" th:if="${#fields.hasErrors('amount')}" th:errors="*{amount}"></span>
+				<div class="col-sm-offset-2 col-sm-10">
+					<h4>料金明細</h4>
+					<table class="table table-striped">
+						<thead>
+							<tr>
+								<th>項目</th>
+								<th>単価 (税抜)</th>
+								<th>数量</th>
+								<th>明細 (税抜)</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>宿泊費</td>
+								<td th:text="${#numbers.formatDecimal(hotelFeeWithoutTax, 0, 'COMMA', 0, 'POINT')} + ' 円'"></td>
+								<td th:text="${numberOfNights}"></td>
+								<td th:text="${#numbers.formatDecimal(subtotalHotel, 0, 'COMMA', 0, 'POINT')} + ' 円'"></td>
+							</tr>
+							<tr>
+								<td>食事代</td>
+								<td th:text="${#numbers.formatDecimal(mealFeeWithoutTax, 0, 'COMMA', 0, 'POINT')} + ' 円'"></td>
+								<td th:text="${numberOfNights}"></td>
+								<td th:text="${#numbers.formatDecimal(subtotalMeal, 0, 'COMMA', 0, 'POINT')} + ' 円'"></td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
+			</div>
+
+			<div class="form-group">
+				<label class="col-sm-2 control-label">明細合計 (税抜)</label>
+				<div class="col-sm-10">
+					<strong th:text="${#numbers.formatDecimal(subtotalHotel + subtotalMeal, 0, 'COMMA', 0, 'POINT')} + ' 円'"></strong>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label">消費税</label>
+				<div class="col-sm-10">
+					<span th:text="${#numbers.formatDecimal(displayedTaxAmount, 0, 'COMMA', 0, 'POINT')} + ' 円'"></span>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label class="col-sm-2 control-label">総合計（明細）</label>
+				<div class="col-sm-10">
+					<strong th:text="${#numbers.formatDecimal(displayedSubtotalWithTax, 0, 'COMMA', 0, 'POINT')} + ' 円'"></strong>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label">総合計（請求金額）</label>
+				<div class="col-sm-10">
+					<strong th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + ' 円'"></strong>
+				</div>
+			</div>
+			
+			<div class="form-group text-danger">
+			    <div class="col-sm-offset-2 col-sm-10">
+			        <strong>表示金額の差額: <span th:text="${#numbers.formatDecimal(difference, 0, 'COMMA', 0, 'POINT')}" /> 円</strong>
+			    </div>
 			</div>
 		</div>
 		<div class="form-group">
