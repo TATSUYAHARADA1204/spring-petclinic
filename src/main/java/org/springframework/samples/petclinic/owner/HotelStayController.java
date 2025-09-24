@@ -43,7 +43,10 @@ class HotelStayController {
 	}
 
 	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/hotel/new")
-	public String initCreationForm() {
+	public String initCreationForm(Pet pet, Map<String, Object> model) {
+		HotelStay stays = new HotelStay();
+		stays.setPet(pet);
+		model.put("hotelStay", stays);
 		return "reservations/createOrUpdateHotelStayForm";
 	}
 

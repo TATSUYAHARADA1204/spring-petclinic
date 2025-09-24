@@ -43,7 +43,10 @@ class TrimmingAppointmentController {
 	}
 
 	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/trimming/new")
-	public String initCreationForm() {
+	public String initCreationForm(Pet pet, Map<String, Object> model) {
+		TrimmingAppointment appointments = new TrimmingAppointment();
+		appointments.setPet(pet);
+		model.put("trimmingAppointment", appointments);
 		return "reservations/createOrUpdateTrimmingAppointmentForm";
 	}
 
