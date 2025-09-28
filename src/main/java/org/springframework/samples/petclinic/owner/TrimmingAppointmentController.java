@@ -30,35 +30,27 @@ class TrimmingAppointmentController {
 		return "reservations/trimmingAppointmentList";
 	}
 
-	@ModelAttribute("pet")
-	public Pet findPet(@PathVariable(name = "petId", required = false) Integer petId) {
-		if (petId == null) {
-			return null;
-		}
-		return this.pets.findById(petId).orElse(null);
-	}
-
 	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/trimming/new")
-	public String initCreationForm(Pet pet, ModelMap model) {
+	public String initCreationForm(@PathVariable("petId") int petId, Map<String, Object> model) {
+		Pet pet = this.pets.findById(petId)
+			.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		TrimmingAppointment trimmingAppointment = new TrimmingAppointment();
 		trimmingAppointment.setPet(pet);
 		model.put("trimmingAppointment", trimmingAppointment);
 		return "reservations/createOrUpdateTrimmingAppointmentForm";
 	}
 
-
-
 	@PostMapping("/owners/{ownerId}/pets/{petId}/reservations/trimming/new")
-	public String processCreationForm(Pet pet, @Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
+	public String processCreationForm(@PathVariable("petId") int petId, @Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
 									  BindingResult result, ModelMap model) {
+		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		if (result.hasErrors()) {
-			// [修正点1] バリデーションエラーがあった場合に pet オブジェクトをモデルに追加する
-			model.put("pet", pet);
+			appointment.setPet(pet);
+			model.put("trimmingAppointment", appointment);
 			return "reservations/createOrUpdateTrimmingAppointmentForm";
 		}
 		else {
-			// [修正点2] 予約情報にペットを紐づけてから保存する
-			pet.addTrimmingAppointment(appointment);
+			appointment.setPet(pet);
 			this.appointments.save(appointment);
 			return "redirect:/owners/{ownerId}";
 		}
