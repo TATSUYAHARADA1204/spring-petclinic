@@ -42,19 +42,6 @@ class HospitalReservationController {
 		return "reservations/hospitalReservationList";
 	}
 
-	@ModelAttribute("hospitalReservation")
-	public HospitalReservation loadPetWithReservation(@PathVariable(name = "petId", required = false) Integer petId,
-													  Map<String, Object> model) {
-		HospitalReservation reservation = new HospitalReservation();
-		if (petId != null) {
-			Pet pet = this.pets.findById(petId)
-				.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
-			reservation.setPet(pet);
-			model.put("pet", pet);
-		}
-		return reservation;
-	}
-
 	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/hospital/new")
 	public String initCreationForm(Pet pet, Map<String, Object> model) {
 		HospitalReservation reservation = new HospitalReservation();

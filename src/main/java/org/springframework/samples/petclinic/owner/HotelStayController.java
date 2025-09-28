@@ -29,18 +29,7 @@ class HotelStayController {
 		return "reservations/hotelStayList";
 	}
 
-	@ModelAttribute("hotelStay")
-	public HotelStay loadPetWithStay(@PathVariable(name = "petId", required = false) Integer petId,
-									 Map<String, Object> model) {
-		HotelStay stay = new HotelStay();
-		if (petId != null) {
-			Pet pet = this.pets.findById(petId)
-				.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
-			stay.setPet(pet);
-			model.put("pet", pet);
-		}
-		return stay;
-	}
+
 
 	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/hotel/new")
 	public String initCreationForm(Pet pet, Map<String, Object> model) {

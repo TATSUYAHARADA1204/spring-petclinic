@@ -16,9 +16,10 @@
 package org.springframework.samples.petclinic.owner;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
+
+import org.springframework.beans.support.MutableSortDefinition;
+import org.springframework.beans.support.PropertyComparator;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.NamedEntity;
 import jakarta.persistence.CascadeType;
@@ -59,6 +60,27 @@ public class Pet extends NamedEntity {
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
 	@OrderBy("date ASC")
 	private final Set<Visit> visits = new LinkedHashSet<>();
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "pet")
+	private Set<TrimmingAppointment> trimmingAppointments;
+
+	protected Set<TrimmingAppointment> getTrimmingAppointmentsInternal() {
+		if (this.trimmingAppointments == null) {
+			this.trimmingAppointments = new HashSet<>();
+		}
+		return this.trimmingAppointments;
+	}
+
+	public List<TrimmingAppointment> getTrimmingAppointments() {
+		List<TrimmingAppointment> sortedTrimmingAppointments = new ArrayList<>(getTrimmingAppointmentsInternal());
+		PropertyComparator.sort(sortedTrimmingAppointments, new MutableSortDefinition("date", false, false));
+		return Collections.unmodifiableList(sortedTrimmingAppointments);
+	}
+
+	public void addTrimmingAppointment(TrimmingAppointment trimmingAppointment) {
+		getTrimmingAppointmentsInternal().add(trimmingAppointment);
+		trimmingAppointment.setPet(this);
+	}
 
 	public void setBirthDate(LocalDate birthDate) {
 		this.birthDate = birthDate;
