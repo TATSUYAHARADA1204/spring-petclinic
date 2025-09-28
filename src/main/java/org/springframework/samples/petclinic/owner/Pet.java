@@ -61,6 +61,24 @@ public class Pet extends NamedEntity {
 	@OrderBy("date ASC")
 	private final Set<Visit> visits = new LinkedHashSet<>();
 
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
+	private Set<HospitalReservation> hospitalReservations;
+
+	public List<HospitalReservation> getHospitalReservations() {
+		if (this.hospitalReservations == null) {
+			return new ArrayList<>();
+		}
+		return new ArrayList<>(this.hospitalReservations);
+	}
+
+	public void addHospitalReservation(HospitalReservation hospitalReservation) {
+		if (this.hospitalReservations == null) {
+			this.hospitalReservations = new HashSet<>();
+		}
+		this.hospitalReservations.add(hospitalReservation);
+		hospitalReservation.setPet(this);
+	}
+
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "pet")
 	private Set<TrimmingAppointment> trimmingAppointments;
 
@@ -80,6 +98,24 @@ public class Pet extends NamedEntity {
 	public void addTrimmingAppointment(TrimmingAppointment trimmingAppointment) {
 		getTrimmingAppointmentsInternal().add(trimmingAppointment);
 		trimmingAppointment.setPet(this);
+	}
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
+	private Set<HotelStay> hotelStays;
+
+	public List<HotelStay> getHotelStays() {
+		if (this.hotelStays == null) {
+			return new ArrayList<>();
+		}
+		return new ArrayList<>(this.hotelStays);
+	}
+
+	public void addHotelStay(HotelStay hotelStay) {
+		if (this.hotelStays == null) {
+			this.hotelStays = new HashSet<>();
+		}
+		this.hotelStays.add(hotelStay);
+		hotelStay.setPet(this);
 	}
 
 	public void setBirthDate(LocalDate birthDate) {

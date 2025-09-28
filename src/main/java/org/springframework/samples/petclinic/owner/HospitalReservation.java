@@ -15,7 +15,6 @@ public class HospitalReservation extends BaseEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "pet_id")
-	@NotNull
 	private Pet pet;
 
 	@ManyToOne
