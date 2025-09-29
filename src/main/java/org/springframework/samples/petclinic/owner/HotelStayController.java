@@ -4,6 +4,7 @@ import java.util.Map;
 import org.springframework.samples.petclinic.owner.PetRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -29,33 +30,30 @@ class HotelStayController {
 		return "reservations/hotelStayList";
 	}
 
-	@ModelAttribute("hotelStay")
-	public HotelStay loadPetWithStay(@PathVariable(name = "petId", required = false) Integer petId,
-									 Map<String, Object> model) {
-		HotelStay stay = new HotelStay();
-		if (petId != null) {
-			Pet pet = this.pets.findById(petId)
-				.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
-			stay.setPet(pet);
-			model.put("pet", pet);
-		}
-		return stay;
-	}
-
 	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/hotel/new")
-	public String initCreationForm() {
+	public String initCreationForm(@PathVariable("petId") int petId, Map<String, Object> model) {
+		Pet pet = this.pets.findById(petId)
+			.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+		HotelStay stays = new HotelStay();
+		stays.setPet(pet);
+		model.put("hotelStay", stays);
 		return "reservations/createOrUpdateHotelStayForm";
 	}
 
 	@PostMapping("/owners/{ownerId}/pets/{petId}/reservations/hotel/new")
-	public String processCreationForm(@Valid @ModelAttribute("hotelStay") HotelStay stay, BindingResult result,
-									  @PathVariable("ownerId") int ownerId) {
+	public String processCreationForm(@PathVariable("petId") int petId,@Valid @ModelAttribute("hotelStay") HotelStay stay, BindingResult result,
+									  @PathVariable("ownerId") int ownerId, ModelMap model) {
+		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		if (result.hasErrors()) {
+			stay.setPet(pet);
+			model.put("hotelStay", stay);
 			return "reservations/createOrUpdateHotelStayForm";
 		}
-
-		this.stays.save(stay);
-		return "redirect:/owners/" + ownerId;
+		else {
+			stay.setPet(pet);
+			this.stays.save(stay);
+			return "redirect:/owners/{ownerId}";
+		}
 	}
 
 	@ModelAttribute("hotelStay")

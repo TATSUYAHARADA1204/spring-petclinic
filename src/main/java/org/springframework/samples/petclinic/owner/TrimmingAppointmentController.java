@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import jakarta.validation.Valid;
+import org.springframework.ui.ModelMap;
 
 @Controller
 class TrimmingAppointmentController {
@@ -29,34 +30,30 @@ class TrimmingAppointmentController {
 		return "reservations/trimmingAppointmentList";
 	}
 
-	@ModelAttribute("trimmingAppointment")
-	public TrimmingAppointment loadPetWithAppointment(@PathVariable(name = "petId", required = false) Integer petId,
-													  Map<String, Object> model) {
-		TrimmingAppointment appointment = new TrimmingAppointment();
-		if (petId != null) {
-			Pet pet = this.pets.findById(petId)
-				.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
-			appointment.setPet(pet);
-			model.put("pet", pet);
-		}
-		return appointment;
-	}
-
 	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/trimming/new")
-	public String initCreationForm() {
+	public String initCreationForm(@PathVariable("petId") int petId, Map<String, Object> model) {
+		Pet pet = this.pets.findById(petId)
+			.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+		TrimmingAppointment trimmingAppointment = new TrimmingAppointment();
+		trimmingAppointment.setPet(pet);
+		model.put("trimmingAppointment", trimmingAppointment);
 		return "reservations/createOrUpdateTrimmingAppointmentForm";
 	}
 
 	@PostMapping("/owners/{ownerId}/pets/{petId}/reservations/trimming/new")
-	public String processCreationForm(
-		@Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
-		BindingResult result, @PathVariable("ownerId") int ownerId) {
+	public String processCreationForm(@PathVariable("petId") int petId, @Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
+									  BindingResult result, ModelMap model) {
+		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		if (result.hasErrors()) {
+			appointment.setPet(pet);
+			model.put("trimmingAppointment", appointment);
 			return "reservations/createOrUpdateTrimmingAppointmentForm";
 		}
-
-		this.appointments.save(appointment);
-		return "redirect:/owners/" + ownerId;
+		else {
+			appointment.setPet(pet);
+			this.appointments.save(appointment);
+			return "redirect:/owners/{ownerId}";
+		}
 	}
 
 	@ModelAttribute("trimmingAppointment")
