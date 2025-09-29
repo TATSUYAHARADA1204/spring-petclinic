@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,12 +16,12 @@
 package org.springframework.samples.petclinic.owner;
 
 import java.time.LocalDate;
-
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.BaseEntity;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 
@@ -41,6 +41,10 @@ public class Visit extends BaseEntity {
 
 	@NotBlank
 	private String description;
+
+	@ManyToOne
+	@JoinColumn(name = "pet_id")
+	private Pet pet;
 
 	/**
 	 * Creates a new instance of Visit for the current date
@@ -65,4 +69,11 @@ public class Visit extends BaseEntity {
 		this.description = description;
 	}
 
+	public Pet getPet() {
+		return pet;
+	}
+
+	public void setPet(Pet pet) {
+		this.pet = pet;
+	}
 }

@@ -12,7 +12,6 @@ public class TrimmingAppointment extends BaseEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "pet_id")
-	@NotNull
 	private Pet pet;
 
 	@Column(name = "appointment_time")

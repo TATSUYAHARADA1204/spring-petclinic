@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import jakarta.validation.Valid;
+import org.springframework.ui.ModelMap;
 
 @Controller
 class TrimmingAppointmentController {
@@ -31,44 +32,61 @@ class TrimmingAppointmentController {
 
 	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/trimming/new")
 	public String initCreationForm(@PathVariable("petId") int petId, Map<String, Object> model) {
-		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId)); // ★
-																														// 修正
-		TrimmingAppointment appointment = new TrimmingAppointment();
-		appointment.setPet(pet);
-		model.put("trimmingAppointment", appointment);
+		Pet pet = this.pets.findById(petId)
+			.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+		TrimmingAppointment trimmingAppointment = new TrimmingAppointment();
+		trimmingAppointment.setPet(pet);
+		model.put("trimmingAppointment", trimmingAppointment);
 		return "reservations/createOrUpdateTrimmingAppointmentForm";
 	}
 
 	@PostMapping("/owners/{ownerId}/pets/{petId}/reservations/trimming/new")
-	public String processCreationForm(@Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
-			BindingResult result, @PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId, Model model) {
+	public String processCreationForm(@PathVariable("petId") int petId, @Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
+									  BindingResult result, ModelMap model) {
+		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		if (result.hasErrors()) {
-			Pet pet = this.pets.findById(petId)
-				.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 			appointment.setPet(pet);
-			model.addAttribute("trimmingAppointment", appointment);
+			model.put("trimmingAppointment", appointment);
 			return "reservations/createOrUpdateTrimmingAppointmentForm";
 		}
-		this.appointments.save(appointment);
-		return "redirect:/owners/" + ownerId;
+		else {
+			appointment.setPet(pet);
+			this.appointments.save(appointment);
+			return "redirect:/owners/{ownerId}";
+		}
+	}
+
+	@ModelAttribute("trimmingAppointment")
+	public TrimmingAppointment appointment(@PathVariable(name = "appointmentId", required = false) Integer appointmentId) {
+		if (appointmentId == null) {
+			return new TrimmingAppointment();
+		}
+		return this.appointments.findById(appointmentId)
+			.orElseThrow(() -> new IllegalArgumentException("Invalid appointment Id:" + appointmentId));
 	}
 
 	@GetMapping("/reservations/trimming/{appointmentId}/edit")
-	public String initUpdateForm(@PathVariable("appointmentId") int appointmentId, Model model) {
-		TrimmingAppointment appointment = this.appointments.findById(appointmentId)
-			.orElseThrow(() -> new IllegalArgumentException("Invalid appointment Id:" + appointmentId));
-		model.addAttribute("trimmingAppointment", appointment);
+	public String initUpdateForm(@ModelAttribute("trimmingAppointment") TrimmingAppointment appointment, Model model) {
+		model.addAttribute("pet", appointment.getPet());
 		return "reservations/createOrUpdateTrimmingAppointmentForm";
 	}
 
 	@PostMapping("/reservations/trimming/{appointmentId}/edit")
 	public String processUpdateForm(@Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
-			BindingResult result, @PathVariable("appointmentId") int appointmentId) {
+									BindingResult result, Model model) {
 		if (result.hasErrors()) {
+			model.addAttribute("pet", appointment.getPet());
 			return "reservations/createOrUpdateTrimmingAppointmentForm";
 		}
-		appointment.setId(appointmentId);
+
 		this.appointments.save(appointment);
+		return "redirect:/reservations/trimming";
+	}
+
+	// --- 削除処理 ---
+	@PostMapping("/reservations/trimming/{appointmentId}/delete")
+	public String deleteAppointment(@PathVariable("appointmentId") int appointmentId) {
+		this.appointments.deleteById(appointmentId);
 		return "redirect:/reservations/trimming";
 	}
 

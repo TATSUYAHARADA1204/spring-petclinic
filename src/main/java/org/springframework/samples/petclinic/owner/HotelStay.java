@@ -12,7 +12,6 @@ public class HotelStay extends BaseEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "pet_id")
-	@NotNull
 	private Pet pet;
 
 	@Column(name = "check_in_date")
