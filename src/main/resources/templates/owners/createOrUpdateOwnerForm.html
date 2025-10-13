@@ -11,8 +11,22 @@
       <input th:replace="~{fragments/inputField :: input (#{lastName}, 'lastName', 'text')}" />
       <input th:replace="~{fragments/inputField :: input (#{address}, 'address', 'text')}" />
       <input th:replace="~{fragments/inputField :: input (#{city}, 'city', 'text')}" />
-      <input th:replace="~{fragments/inputField :: input (#{telephone}, 'telephone', 'text')}" />
     </div>
+	
+	<div class="form-group">
+	  <label for="telephoneDisplay" class="control-label col-sm-2" th:text="#{telephone}">Telephone</label>
+	  <div class="col-sm-10">
+	    <div class="input-group">
+	      <input type="text" id="telephoneDisplay" class="form-control"
+	             th:value="${owner.telephone}" oninput="formatTelephone(this)" />
+	      <span class="input-group-btn">
+	        <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear</button>
+	      </span>
+	    </div>
+	  </div>
+	  <input type="hidden" name="telephone" id="telephone" th:value="${owner.telephone}" />
+	</div>
+	
     <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">
         <button th:with="text=${owner['new']} ? #{addOwner} : #{updateOwner}" class="btn btn-primary" type="submit"
@@ -20,6 +34,36 @@
       </div>
     </div>
   </form>
+  
+  <script>
+	// フォーム値クリア
+	function clearForm() {
+	  const telephoneInput = document.getElementById('telephoneDisplay');
+	  //const hiddenInput = document.getElementById('telephoneHdn');
+	  if (telephoneInput) telephoneInput.value = '';
+	  //if (hiddenInput) hiddenInput.value = '';
+	}	
+
+	//電話番号のフォーマッタ (America 3-3-4の10桁)
+	function formatTelephone(input) {
+	  let raw = input.value.replace(/\D/g, '').substring(0, 10);
+	  let formatted = raw;
+	  if (raw.length >= 7) {
+	    formatted = raw.substring(0, 3) + '-' + raw.substring(3, 6) + '-' + raw.substring(6);
+	  } else if (raw.length >= 4) {
+	    formatted = raw.substring(0, 3) + '-' + raw.substring(3);
+	  }
+	  input.value = formatted;
+	  document.getElementById('telephone').value = raw;
+	}
+
+	document.addEventListener("DOMContentLoaded", function() {
+	  const input = document.getElementById('telephoneDisplay');
+	  if (input) formatTelephone(input);
+	});
+
+  </script>
+  
 </body>
 
 </html>
