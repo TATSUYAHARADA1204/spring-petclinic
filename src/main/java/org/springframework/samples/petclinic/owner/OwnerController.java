@@ -17,8 +17,12 @@ package org.springframework.samples.petclinic.owner;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.io.FileOutputStream;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+
+import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -70,8 +74,20 @@ class OwnerController {
 
 	@ModelAttribute("owner")
 	public Owner findOwner(@PathVariable(name = "ownerId", required = false) Integer ownerId) {
+		
 		return ownerId == null ? new Owner()
 				: this.owners.findById(ownerId)
+					.map(owner -> {
+						try {
+							//"C:\Users\[ユーザ]\AppData\Local\Temp\tempLog.txt"
+							FileOutputStream fos = new FileOutputStream( Paths.get(System.getProperty("java.io.tmpdir")) + "\\tempLog.txt", true);
+							fos.write(("Find by : ownerId = " + owner.toString() + System.lineSeparator()).getBytes());
+						} catch (Exception e) {
+				        	System.out.println("ログの書込みに失敗しました");
+				            e.printStackTrace();
+				        }
+						return owner;
+					})
 					.orElseThrow(() -> new IllegalArgumentException("Owner not found with id: " + ownerId
 							+ ". Please ensure the ID is correct " + "and the owner exists in the database."));
 	}

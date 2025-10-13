@@ -8,6 +8,7 @@ import org.springframework.samples.petclinic.vet.Vet;
 import org.springframework.samples.petclinic.vet.VetRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -44,7 +45,8 @@ class HospitalReservationController {
 
 	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/hospital/new")
 	public String initCreationForm(@PathVariable("petId") int petId, Map<String, Object> model) {
-		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+		Pet pet = this.pets.findById(petId)
+			.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		HospitalReservation reservation = new HospitalReservation();
 		reservation.setPet(pet);
 		model.put("hospitalReservation", reservation);
@@ -52,34 +54,51 @@ class HospitalReservationController {
 	}
 
 	@PostMapping("/owners/{ownerId}/pets/{petId}/reservations/hospital/new")
-	public String processCreationForm(@Valid @ModelAttribute("hospitalReservation") HospitalReservation reservation,
-			BindingResult result, @PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId, Model model) {
+	public String processCreationForm(@PathVariable("petId") int petId,@Valid @ModelAttribute("hospitalReservation") HospitalReservation reservation,
+									  BindingResult result, @PathVariable("ownerId") int ownerId, ModelMap model) {
+		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		if (result.hasErrors()) {
-			Pet pet = this.pets.findById(petId)
-				.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 			reservation.setPet(pet);
-			model.addAttribute("hospitalReservation", reservation);
+			model.put("hospitalReservation", reservation);
 			return "reservations/createOrUpdateHospitalReservationForm";
 		}
-		this.reservations.save(reservation);
-		return "redirect:/owners/" + ownerId;
+		else {
+			reservation.setPet(pet);
+			this.reservations.save(reservation);
+			return "redirect:/owners/{ownerId}";
+		}
+	}
+
+	/**
+	 * 編集対象の予約情報を事前に取得し、モデルに"hospitalReservation"という名前で格納します。
+	 * このメソッドはinitUpdateFormやprocessUpdateFormよりも先に実行されます。
+	 */
+	@ModelAttribute("hospitalReservation")
+	public HospitalReservation reservation(@PathVariable(name = "reservationId", required = false) Integer reservationId) {
+		if (reservationId == null) {
+			return new HospitalReservation();
+		}
+		// DBから予約情報を取得（これにはペット情報も含まれています）
+		return this.reservations.findById(reservationId)
+			.orElseThrow(() -> new IllegalArgumentException("Invalid reservation Id:" + reservationId));
 	}
 
 	@GetMapping("/reservations/hospital/{reservationId}/edit")
-	public String initUpdateForm(@PathVariable("reservationId") int reservationId, Model model) {
-		HospitalReservation reservation = this.reservations.findById(reservationId)
-			.orElseThrow(() -> new IllegalArgumentException("Invalid reservation Id:" + reservationId));
-		model.addAttribute("hospitalReservation", reservation);
+	public String initUpdateForm(@ModelAttribute("hospitalReservation") HospitalReservation reservation, Model model) {
+		// 事前に準備された予約情報からペット情報を取得し、画面表示用にモデルへ追加
+		model.addAttribute("pet", reservation.getPet());
 		return "reservations/createOrUpdateHospitalReservationForm";
 	}
 
 	@PostMapping("/reservations/hospital/{reservationId}/edit")
 	public String processUpdateForm(@Valid @ModelAttribute("hospitalReservation") HospitalReservation reservation,
-			BindingResult result, @PathVariable("reservationId") int reservationId) {
+									BindingResult result, Model model) {
 		if (result.hasErrors()) {
+			// バリデーションエラーで画面に戻る際も、ペット情報をモデルへ追加
+			model.addAttribute("pet", reservation.getPet());
 			return "reservations/createOrUpdateHospitalReservationForm";
 		}
-		reservation.setId(reservationId);
+
 		this.reservations.save(reservation);
 		return "redirect:/reservations/hospital";
 	}

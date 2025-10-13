@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,13 +16,12 @@
 package org.springframework.samples.petclinic.owner;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
+import org.springframework.beans.support.MutableSortDefinition;
+import org.springframework.beans.support.PropertyComparator;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.NamedEntity;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -57,10 +56,67 @@ public class Pet extends NamedEntity {
 	@JoinColumn(name = "owner_id")
 	private Owner owner;
 
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(name = "pet_id")
+	// mappedBy = "pet" を追加し、cascadeタイプを修正します
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
 	@OrderBy("date ASC")
 	private final Set<Visit> visits = new LinkedHashSet<>();
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
+	private Set<HospitalReservation> hospitalReservations;
+
+	public List<HospitalReservation> getHospitalReservations() {
+		if (this.hospitalReservations == null) {
+			return new ArrayList<>();
+		}
+		return new ArrayList<>(this.hospitalReservations);
+	}
+
+	public void addHospitalReservation(HospitalReservation hospitalReservation) {
+		if (this.hospitalReservations == null) {
+			this.hospitalReservations = new HashSet<>();
+		}
+		this.hospitalReservations.add(hospitalReservation);
+		hospitalReservation.setPet(this);
+	}
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "pet")
+	private Set<TrimmingAppointment> trimmingAppointments;
+
+	protected Set<TrimmingAppointment> getTrimmingAppointmentsInternal() {
+		if (this.trimmingAppointments == null) {
+			this.trimmingAppointments = new HashSet<>();
+		}
+		return this.trimmingAppointments;
+	}
+
+	public List<TrimmingAppointment> getTrimmingAppointments() {
+		List<TrimmingAppointment> sortedTrimmingAppointments = new ArrayList<>(getTrimmingAppointmentsInternal());
+		PropertyComparator.sort(sortedTrimmingAppointments, new MutableSortDefinition("date", false, false));
+		return Collections.unmodifiableList(sortedTrimmingAppointments);
+	}
+
+	public void addTrimmingAppointment(TrimmingAppointment trimmingAppointment) {
+		getTrimmingAppointmentsInternal().add(trimmingAppointment);
+		trimmingAppointment.setPet(this);
+	}
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
+	private Set<HotelStay> hotelStays;
+
+	public List<HotelStay> getHotelStays() {
+		if (this.hotelStays == null) {
+			return new ArrayList<>();
+		}
+		return new ArrayList<>(this.hotelStays);
+	}
+
+	public void addHotelStay(HotelStay hotelStay) {
+		if (this.hotelStays == null) {
+			this.hotelStays = new HashSet<>();
+		}
+		this.hotelStays.add(hotelStay);
+		hotelStay.setPet(this);
+	}
 
 	public void setBirthDate(LocalDate birthDate) {
 		this.birthDate = birthDate;
@@ -82,7 +138,7 @@ public class Pet extends NamedEntity {
 		return this.owner;
 	}
 
-	public void setOwner(Owner owner) {
+	protected void setOwner(Owner owner) {
 		this.owner = owner;
 	}
 
@@ -92,6 +148,7 @@ public class Pet extends NamedEntity {
 
 	public void addVisit(Visit visit) {
 		getVisits().add(visit);
+		visit.setPet(this);
 	}
 
 }
