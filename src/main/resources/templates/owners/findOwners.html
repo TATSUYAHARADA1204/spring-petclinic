@@ -6,6 +6,12 @@
 
   <h2 th:text="#{findOwners}">Find Owners</h2>
 
+  <div th:if="${message}" class="alert alert-success" role="alert">
+    <p th:text="${message}"></p>
+  </div>
+  <div th:if="${error}" class="alert alert-danger" role="alert">
+    <p th:text="${error}"></p>
+  </div>
   <form th:object="${owner}" th:action="@{/owners}" method="get" class="form-horizontal" id="search-owner-form">
     <div class="form-group">
       <div class="control-group" id="lastNameGroup">
@@ -26,9 +32,15 @@
       </div>
     </div>
 
+  </form>
+
+  <div style="margin-top: 10px;">
     <a class="btn btn-primary" th:href="@{/owners/new}" th:text="#{addOwner}">Add Owner</a>
 
-  </form>
+    <form th:action="@{/owners/batch-insert}" method="post" style="display: inline-block; margin-left: 5px;">
+      <button class="btn btn-primary" type="submit" th:text="#{addOwner} + '（一括）'">Add Owner（一括）</button>
+    </form>
+  </div>
 
 </body>
 
