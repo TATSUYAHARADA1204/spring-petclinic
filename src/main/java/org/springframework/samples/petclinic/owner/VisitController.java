@@ -31,6 +31,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 class VisitController {
 
 	private final VisitRepository visits;
+
 	private final PetRepository pets;
 
 	public VisitController(VisitRepository visits, PetRepository pets) {
@@ -45,8 +46,7 @@ class VisitController {
 
 	@ModelAttribute("visit")
 	public Visit loadPetWithVisit(@PathVariable("petId") int petId, Map<String, Object> model) {
-		Pet pet = this.pets.findById(petId)
-			.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		model.put("pet", pet);
 		model.put("owner", pet.getOwner());
 		Visit visit = new Visit();
@@ -71,4 +71,5 @@ class VisitController {
 		redirectAttributes.addFlashAttribute("message", "Your visit has been booked");
 		return "redirect:/owners/{ownerId}";
 	}
+
 }

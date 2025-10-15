@@ -25,6 +25,7 @@
 </table>
 
 <a th:href="@{/owners/{ownerId}/edit(ownerId=${owner.id})}" class="btn btn-primary">Edit Owner</a>
+<a th:href="@{/owners/{ownerId}/copy-to-new(ownerId=${owner.id})}" class="btn btn-primary">Duplicate Owner</a> 
 <a th:href="@{/owners/{ownerId}/pets/new(ownerId=${owner.id})}" class="btn btn-primary">Add New Pet</a>
 
 <br/>
@@ -45,7 +46,7 @@
         <dt>Type</dt>
         <dd th:text="${pet.type.name}"></dd>
         <!-- =================================================================== -->
-        <!-- äºˆç´„ãƒªãƒ³ã‚¯ -->
+        <!-- —\–ñƒŠƒ“ƒN -->
         <!-- =================================================================== -->
         <dt>Reservations</dt>
         <dd>

@@ -32,8 +32,7 @@ class TrimmingAppointmentController {
 
 	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/trimming/new")
 	public String initCreationForm(@PathVariable("petId") int petId, Map<String, Object> model) {
-		Pet pet = this.pets.findById(petId)
-			.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		TrimmingAppointment trimmingAppointment = new TrimmingAppointment();
 		trimmingAppointment.setPet(pet);
 		model.put("trimmingAppointment", trimmingAppointment);
@@ -41,8 +40,9 @@ class TrimmingAppointmentController {
 	}
 
 	@PostMapping("/owners/{ownerId}/pets/{petId}/reservations/trimming/new")
-	public String processCreationForm(@PathVariable("petId") int petId, @Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
-									  BindingResult result, ModelMap model) {
+	public String processCreationForm(@PathVariable("petId") int petId,
+			@Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment, BindingResult result,
+			ModelMap model) {
 		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		if (result.hasErrors()) {
 			appointment.setPet(pet);
@@ -57,7 +57,8 @@ class TrimmingAppointmentController {
 	}
 
 	@ModelAttribute("trimmingAppointment")
-	public TrimmingAppointment appointment(@PathVariable(name = "appointmentId", required = false) Integer appointmentId) {
+	public TrimmingAppointment appointment(
+			@PathVariable(name = "appointmentId", required = false) Integer appointmentId) {
 		if (appointmentId == null) {
 			return new TrimmingAppointment();
 		}
@@ -73,7 +74,7 @@ class TrimmingAppointmentController {
 
 	@PostMapping("/reservations/trimming/{appointmentId}/edit")
 	public String processUpdateForm(@Valid @ModelAttribute("trimmingAppointment") TrimmingAppointment appointment,
-									BindingResult result, Model model) {
+			BindingResult result, Model model) {
 		if (result.hasErrors()) {
 			model.addAttribute("pet", appointment.getPet());
 			return "reservations/createOrUpdateTrimmingAppointmentForm";
