@@ -32,8 +32,7 @@ class HotelStayController {
 
 	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/hotel/new")
 	public String initCreationForm(@PathVariable("petId") int petId, Map<String, Object> model) {
-		Pet pet = this.pets.findById(petId)
-			.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		HotelStay stays = new HotelStay();
 		stays.setPet(pet);
 		model.put("hotelStay", stays);
@@ -41,8 +40,9 @@ class HotelStayController {
 	}
 
 	@PostMapping("/owners/{ownerId}/pets/{petId}/reservations/hotel/new")
-	public String processCreationForm(@PathVariable("petId") int petId,@Valid @ModelAttribute("hotelStay") HotelStay stay, BindingResult result,
-									  @PathVariable("ownerId") int ownerId, ModelMap model) {
+	public String processCreationForm(@PathVariable("petId") int petId,
+			@Valid @ModelAttribute("hotelStay") HotelStay stay, BindingResult result,
+			@PathVariable("ownerId") int ownerId, ModelMap model) {
 		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		if (result.hasErrors()) {
 			stay.setPet(pet);
@@ -71,8 +71,8 @@ class HotelStayController {
 	}
 
 	@PostMapping("/reservations/hotel/{stayId}/edit")
-	public String processUpdateForm(@Valid @ModelAttribute("hotelStay") HotelStay stay,
-									BindingResult result, Model model) {
+	public String processUpdateForm(@Valid @ModelAttribute("hotelStay") HotelStay stay, BindingResult result,
+			Model model) {
 		if (result.hasErrors()) {
 			model.addAttribute("pet", stay.getPet());
 			return "reservations/createOrUpdateHotelStayForm";
