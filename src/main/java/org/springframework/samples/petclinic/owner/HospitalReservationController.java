@@ -45,8 +45,7 @@ class HospitalReservationController {
 
 	@GetMapping("/owners/{ownerId}/pets/{petId}/reservations/hospital/new")
 	public String initCreationForm(@PathVariable("petId") int petId, Map<String, Object> model) {
-		Pet pet = this.pets.findById(petId)
-			.orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
+		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		HospitalReservation reservation = new HospitalReservation();
 		reservation.setPet(pet);
 		model.put("hospitalReservation", reservation);
@@ -54,8 +53,9 @@ class HospitalReservationController {
 	}
 
 	@PostMapping("/owners/{ownerId}/pets/{petId}/reservations/hospital/new")
-	public String processCreationForm(@PathVariable("petId") int petId,@Valid @ModelAttribute("hospitalReservation") HospitalReservation reservation,
-									  BindingResult result, @PathVariable("ownerId") int ownerId, ModelMap model) {
+	public String processCreationForm(@PathVariable("petId") int petId,
+			@Valid @ModelAttribute("hospitalReservation") HospitalReservation reservation, BindingResult result,
+			@PathVariable("ownerId") int ownerId, ModelMap model) {
 		Pet pet = this.pets.findById(petId).orElseThrow(() -> new IllegalArgumentException("Invalid pet Id:" + petId));
 		if (result.hasErrors()) {
 			reservation.setPet(pet);
@@ -74,7 +74,8 @@ class HospitalReservationController {
 	 * このメソッドはinitUpdateFormやprocessUpdateFormよりも先に実行されます。
 	 */
 	@ModelAttribute("hospitalReservation")
-	public HospitalReservation reservation(@PathVariable(name = "reservationId", required = false) Integer reservationId) {
+	public HospitalReservation reservation(
+			@PathVariable(name = "reservationId", required = false) Integer reservationId) {
 		if (reservationId == null) {
 			return new HospitalReservation();
 		}
@@ -92,7 +93,7 @@ class HospitalReservationController {
 
 	@PostMapping("/reservations/hospital/{reservationId}/edit")
 	public String processUpdateForm(@Valid @ModelAttribute("hospitalReservation") HospitalReservation reservation,
-									BindingResult result, Model model) {
+			BindingResult result, Model model) {
 		if (result.hasErrors()) {
 			// バリデーションエラーで画面に戻る際も、ペット情報をモデルへ追加
 			model.addAttribute("pet", reservation.getPet());

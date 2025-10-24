@@ -60,9 +60,9 @@ public class Owner extends Person {
 	@NotBlank
 	@Pattern(regexp = "\\d{10}", message = "{telephone.invalid}")
 	private String telephone;
-	
-	//@Transient
-	//private String telephoneHdn;
+
+	// @Transient
+	// private String telephoneHdn;
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinColumn(name = "owner_id")
@@ -176,12 +176,11 @@ public class Owner extends Person {
 		pet.addVisit(visit);
 	}
 
-	/*	public String getTelephoneHdn() {
-			return telephoneHdn;
-		}
-	
-		public void setTelephoneHdn(String telephoneHdn) {
-			this.telephoneHdn = telephoneHdn;
-		}*/
+	/*
+	 * public String getTelephoneHdn() { return telephoneHdn; }
+	 *
+	 * public void setTelephoneHdn(String telephoneHdn) { this.telephoneHdn =
+	 * telephoneHdn; }
+	 */
 
 }
