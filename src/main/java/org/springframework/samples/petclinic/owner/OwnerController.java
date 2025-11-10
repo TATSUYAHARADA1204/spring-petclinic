@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,14 +15,24 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.io.FileOutputStream;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+
+import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpSession;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,8 +42,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-
-import jakarta.validation.Valid;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
@@ -48,10 +57,19 @@ class OwnerController {
 
 	private static final String VIEWS_OWNER_CREATE_OR_UPDATE_FORM = "owners/createOrUpdateOwnerForm";
 
+	private static final String COPY_OWNER_SESSION_ATTRIBUTE = "copiedOwner";
+
 	private final OwnerRepository owners;
 
-	public OwnerController(OwnerRepository owners) {
+	private final JdbcTemplate jdbcTemplate;
+
+	private final HttpSession session;
+
+	public OwnerController(OwnerRepository owners, JdbcTemplate jdbcTemplate, HttpSession session) { // ★
+																										// 修正
 		this.owners = owners;
+		this.jdbcTemplate = jdbcTemplate;
+		this.session = session;
 	}
 
 	@InitBinder
@@ -61,14 +79,43 @@ class OwnerController {
 
 	@ModelAttribute("owner")
 	public Owner findOwner(@PathVariable(name = "ownerId", required = false) Integer ownerId) {
-		return ownerId == null ? new Owner()
-				: this.owners.findById(ownerId)
-					.orElseThrow(() -> new IllegalArgumentException("Owner not found with id: " + ownerId
-							+ ". Please ensure the ID is correct " + "and the owner exists in the database."));
+
+		return ownerId == null ? new Owner() : this.owners.findById(ownerId).map(owner -> {
+			try {
+				// "C:\Users\[ユーザ]\AppData\Local\Temp\tempLog.txt"
+				FileOutputStream fos = new FileOutputStream(
+						Paths.get(System.getProperty("java.io.tmpdir")) + "\\tempLog.txt", true);
+				fos.write(("Find by : ownerId = " + owner.toString() + System.lineSeparator()).getBytes());
+			}
+			catch (Exception e) {
+				System.out.println("ログの書込みに失敗しました");
+				e.printStackTrace();
+			}
+			return owner;
+		})
+			.orElseThrow(() -> new IllegalArgumentException("Owner not found with id: " + ownerId
+					+ ". Please ensure the ID is correct " + "and the owner exists in the database."));
 	}
 
 	@GetMapping("/owners/new")
-	public String initCreationForm() {
+	public String initCreationForm(Model model) {
+		Owner owner = new Owner();
+		Owner copiedOwner = (Owner) session.getAttribute(COPY_OWNER_SESSION_ATTRIBUTE);
+
+		if (copiedOwner != null) {
+			// 値のコピー
+			owner.setFirstName(copiedOwner.getFirstName());
+			owner.setLastName(copiedOwner.getLastName());
+			owner.setCity(copiedOwner.getCity());
+			owner.setTelephone(copiedOwner.getTelephone());
+
+			// セッションからコピー元の情報を削除
+			session.removeAttribute(COPY_OWNER_SESSION_ATTRIBUTE);
+		}
+
+		// コピーされたOwnerオブジェクトをモデルに設定
+		model.addAttribute("owner", owner);
+
 		return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
 	}
 
@@ -79,6 +126,7 @@ class OwnerController {
 			return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
 		}
 
+		// IDがnullであるため、一意制約違反なく新規登録される
 		this.owners.save(owner);
 		redirectAttributes.addFlashAttribute("message", "New Owner Created");
 		return "redirect:/owners/" + owner.getId();
@@ -117,6 +165,15 @@ class OwnerController {
 
 	private String addPaginationModel(int page, Model model, Page<Owner> paginated) {
 		List<Owner> listOwners = paginated.getContent();
+
+		for (Owner owner : listOwners) {
+			// Owner.getLastName()がnullの場合、toUpperCase()を呼び出すことで意図的にNullPointerExceptionを発生させる
+			if (owner.getLastName() == null) {
+				// ここでNULLPointerExceptionが発生し、画面にエラーが表示される
+				String intentionallyFail = owner.getLastName().toUpperCase();
+			}
+		}
+
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", paginated.getTotalPages());
 		model.addAttribute("totalItems", paginated.getTotalElements());
@@ -167,7 +224,53 @@ class OwnerController {
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
 		mav.addObject(owner);
+
+		// Duplicate Ownerボタン用のURLをビューに追加
+		mav.addObject("copyUrl", "/owners/" + ownerId + "/copy-to-new");
+
 		return mav;
+	}
+
+	// コピー元の情報をセッションに保存し、新規作成画面にリダイレクト
+	@GetMapping("/owners/{ownerId}/copy-to-new")
+	public String copyOwnerToNew(@PathVariable("ownerId") int ownerId, RedirectAttributes redirectAttributes) {
+		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
+		Owner owner = optionalOwner
+			.orElseThrow(() -> new IllegalArgumentException("Owner not found with id: " + ownerId));
+
+		// セッションにオーナー情報を保存
+		session.setAttribute(COPY_OWNER_SESSION_ATTRIBUTE, owner);
+
+		redirectAttributes.addFlashAttribute("message", "オーナー情報がコピーされました。新規作成フォームに入力してください。");
+		return "redirect:/owners/new";
+	}
+
+	// バッチインサート処理
+	@PostMapping("/owners/batch-insert")
+	@Transactional // ★ 追加: トランザクションを確保し、DBへのコミットと永続化コンテキストの同期を助ける
+	public String batchInsertOwners(RedirectAttributes redirectAttributes) {
+		try {
+			// 1. data_batch.sqlファイルを読み込む (db/h2/に配置を想定)
+			ClassPathResource resource = new ClassPathResource("db/h2/data_batch.sql");
+
+			String sqlScript = new String(FileCopyUtils.copyToByteArray(resource.getInputStream()),
+					StandardCharsets.UTF_8);
+
+			// 2. SQLスクリプトを実行
+			this.jdbcTemplate.execute(sqlScript);
+
+			// 3. 成功メッセージを設定し、Find Ownersページにリダイレクト
+			redirectAttributes.addFlashAttribute("message", "オーナーデータの一括インポートが成功しました。");
+
+		}
+		catch (IOException e) {
+			redirectAttributes.addFlashAttribute("error", "バッチSQLファイルの読み込み中にエラーが発生しました: " + e.getMessage());
+		}
+		catch (Exception e) {
+			redirectAttributes.addFlashAttribute("error", "バッチSQLの実行中にエラーが発生しました: " + e.getMessage());
+		}
+
+		return "redirect:/owners/find";
 	}
 
 }
